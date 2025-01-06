@@ -1,0 +1,3 @@
+# https://docs.expo.dev/guides/using-eslint/#eslint-is-slow 해결방안
+/.expo
+node_modules
