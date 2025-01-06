@@ -22,6 +22,7 @@ type ToDoList = {
 };
 
 const STORAGE_KEY = '@toDos';
+const MODE_KEY = '@previousMode';
 
 export default function App() {
   const [working, setWorking] = useState(true);
@@ -30,14 +31,28 @@ export default function App() {
 
   useEffect(() => {
     loadToDos();
+    loadPreviousMode(); // 챌린지 1: 마지막의 working 상태를 복원하여 표시하시오. (Work 모드인지 Travel 모드인지)
   }, []);
 
-  const travel = () => setWorking(false);
-  const work = () => setWorking(true);
+  const travel = () => {
+    setWorking(false);
+    saveCurrentMode(false);
+  };
+  const work = () => {
+    setWorking(true);
+    saveCurrentMode(true);
+  };
   const onChangeText = (payload: string) => setText(payload);
   const saveToDos = async (toSave: ToDoList) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch (e) {
+      // saving error
+    }
+  };
+  const saveCurrentMode = async (bool: boolean) => {
+    try {
+      await AsyncStorage.setItem(MODE_KEY, JSON.stringify(bool));
     } catch (e) {
       // saving error
     }
@@ -80,6 +95,16 @@ export default function App() {
         },
       },
     ]);
+  };
+  const loadPreviousMode = async () => {
+    try {
+      const previousMode = await AsyncStorage.getItem(MODE_KEY);
+      if (previousMode !== null) {
+        setWorking(previousMode === 'true');
+      }
+    } catch (e) {
+      // error reading value
+    }
   };
 
   return (
