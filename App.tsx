@@ -16,6 +16,7 @@ import Fontisto from '@expo/vector-icons/Fontisto';
 type ToDo = {
   text: string;
   working: boolean;
+  completed: boolean;
 };
 type ToDoList = {
   [key: string]: ToDo;
@@ -72,7 +73,7 @@ export default function App() {
 
     // save to do
     const newToDos: ToDoList = Object.assign({}, toDos, {
-      [Date.now()]: { text, working },
+      [Date.now()]: { text, working, completed: false },
     });
     setToDos(newToDos);
     await saveToDos(newToDos);
@@ -105,6 +106,14 @@ export default function App() {
     } catch (e) {
       // error reading value
     }
+  };
+
+  // 챌린지 2: To Do를 "완료" 하기 위한 기능 추가하기
+  const handleCompleteState = (key: string, changeTo: boolean) => {
+    const newToDos = { ...toDos };
+    newToDos[key].completed = changeTo;
+    setToDos(newToDos);
+    saveToDos(newToDos);
   };
 
   return (
@@ -144,7 +153,35 @@ export default function App() {
         {Object.keys(toDos).map((key) =>
           toDos[key].working === working ? (
             <View key={key} style={styles.toDo}>
-              <Text style={styles.todoText}>{toDos[key].text}</Text>
+              <View style={styles.todoLeft}>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleCompleteState(key, !toDos[key].completed)
+                  }
+                >
+                  <Fontisto
+                    name={
+                      toDos[key].completed
+                        ? 'checkbox-active'
+                        : 'checkbox-passive'
+                    }
+                    size={18}
+                    color={toDos[key].completed ? theme.grey : 'white'}
+                  />
+                </TouchableOpacity>
+                <Text
+                  style={{
+                    ...styles.todoText,
+                    textDecorationLine: toDos[key].completed
+                      ? 'line-through' // 완료된 To Do는 취소선을 그어준다.
+                      : undefined,
+                    color: toDos[key].completed ? theme.grey : 'white',
+                  }}
+                >
+                  {toDos[key].text}
+                </Text>
+              </View>
+
               <TouchableOpacity onPress={() => deleteToDo(key)}>
                 <Fontisto name="trash" size={18} color={theme.grey} />
               </TouchableOpacity>
@@ -193,5 +230,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 500,
+  },
+  todoLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 });
