@@ -7,10 +7,11 @@ import {
   TextInput,
   ScrollView,
   Alert,
+  Button,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Fontisto from '@expo/vector-icons/Fontisto';
 
 type ToDo = {
@@ -29,6 +30,8 @@ export default function App() {
   const [working, setWorking] = useState(true);
   const [text, setText] = useState('');
   const [toDos, setToDos] = useState<ToDoList>({});
+  const [editKey, setEditKey] = useState('');
+  const [editValue, setEditValue] = useState('');
 
   useEffect(() => {
     loadToDos();
@@ -116,6 +119,28 @@ export default function App() {
     saveToDos(newToDos);
   };
 
+  const onPressEdit = (key: string, initValue: string) => {
+    setEditKey(key);
+    setEditValue(initValue);
+  };
+
+  // 챌린지 3: To Do 수정 기능 추가하기
+  const onChangeEditText = (payload: string) => setEditValue(payload);
+  const updateToDo = () => {
+    const newToDos = { ...toDos };
+    newToDos[editKey].text = editValue;
+    setToDos(newToDos);
+    saveToDos(newToDos);
+
+    // clean up
+    setEditKey('');
+    setEditValue('');
+  };
+  const cancelUpdate = () => {
+    setEditKey('');
+    setEditValue('');
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -153,38 +178,59 @@ export default function App() {
         {Object.keys(toDos).map((key) =>
           toDos[key].working === working ? (
             <View key={key} style={styles.toDo}>
-              <View style={styles.todoLeft}>
-                <TouchableOpacity
-                  onPress={() =>
-                    handleCompleteState(key, !toDos[key].completed)
-                  }
-                >
-                  <Fontisto
-                    name={
-                      toDos[key].completed
-                        ? 'checkbox-active'
-                        : 'checkbox-passive'
-                    }
-                    size={18}
-                    color={toDos[key].completed ? theme.grey : 'white'}
+              {editKey === key ? (
+                <View style={styles.editToDo}>
+                  <TextInput
+                    style={styles.editInput}
+                    value={editValue}
+                    onChangeText={onChangeEditText}
                   />
-                </TouchableOpacity>
-                <Text
-                  style={{
-                    ...styles.todoText,
-                    textDecorationLine: toDos[key].completed
-                      ? 'line-through' // 완료된 To Do는 취소선을 그어준다.
-                      : undefined,
-                    color: toDos[key].completed ? theme.grey : 'white',
-                  }}
-                >
-                  {toDos[key].text}
-                </Text>
-              </View>
+                  <Button title="저장" onPress={updateToDo} />
+                  <Button title="취소" color="red" onPress={cancelUpdate} />
+                </View>
+              ) : (
+                <React.Fragment>
+                  <View style={styles.todoLeft}>
+                    <TouchableOpacity
+                      onPress={() =>
+                        handleCompleteState(key, !toDos[key].completed)
+                      }
+                    >
+                      <Fontisto
+                        name={
+                          toDos[key].completed
+                            ? 'checkbox-active'
+                            : 'checkbox-passive'
+                        }
+                        size={18}
+                        color={toDos[key].completed ? theme.grey : 'white'}
+                      />
+                    </TouchableOpacity>
+                    <Text
+                      style={{
+                        ...styles.todoText,
+                        textDecorationLine: toDos[key].completed
+                          ? 'line-through' // 완료된 To Do는 취소선을 그어준다.
+                          : undefined,
+                        color: toDos[key].completed ? theme.grey : 'white',
+                      }}
+                    >
+                      {toDos[key].text}
+                    </Text>
+                  </View>
 
-              <TouchableOpacity onPress={() => deleteToDo(key)}>
-                <Fontisto name="trash" size={18} color={theme.grey} />
-              </TouchableOpacity>
+                  <View style={styles.todoRight}>
+                    <Button
+                      title="수정"
+                      color="#495057"
+                      onPress={() => onPressEdit(key, toDos[key].text)}
+                    />
+                    <TouchableOpacity onPress={() => deleteToDo(key)}>
+                      <Fontisto name="trash" size={18} color={theme.grey} />
+                    </TouchableOpacity>
+                  </View>
+                </React.Fragment>
+              )}
             </View>
           ) : null,
         )}
@@ -235,5 +281,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+  },
+  todoRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  editToDo: {
+    flexDirection: 'row',
+    flex: 1,
+    alignItems: 'center',
+    gap: 10,
+  },
+  editInput: {
+    borderRadius: 5,
+    backgroundColor: theme.grey,
+    flex: 1,
+    color: 'white',
+    paddingHorizontal: 10,
   },
 });
