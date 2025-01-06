@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Button,
+  Platform,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { theme } from './colors';
@@ -85,20 +86,30 @@ export default function App() {
     setText('');
   };
   const deleteToDo = (key: string) => {
-    Alert.alert('Delete To Do', 'Are you sure?', [
-      {
-        text: 'Cancel',
-      },
-      {
-        text: `I'm Sure`,
-        onPress: () => {
-          const newToDos = { ...toDos };
-          delete newToDos[key];
-          setToDos(newToDos);
-          saveToDos(newToDos);
+    if (Platform.OS === 'web') {
+      const ok = window.confirm('Do you want to delete this To Do?');
+      if (ok) {
+        const newToDos = { ...toDos };
+        delete newToDos[key];
+        setToDos(newToDos);
+        saveToDos(newToDos);
+      }
+    } else {
+      Alert.alert('Delete To Do', 'Are you sure?', [
+        {
+          text: 'Cancel',
         },
-      },
-    ]);
+        {
+          text: `I'm Sure`,
+          onPress: () => {
+            const newToDos = { ...toDos };
+            delete newToDos[key];
+            setToDos(newToDos);
+            saveToDos(newToDos);
+          },
+        },
+      ]);
+    }
   };
   const loadPreviousMode = async () => {
     try {
